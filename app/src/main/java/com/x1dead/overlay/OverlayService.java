@@ -10,6 +10,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class OverlayService extends Service {
     private WindowManager windowManager;
@@ -23,12 +24,10 @@ public class OverlayService extends Service {
         super.onCreate();
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        // Создаем контейнер для меню
         layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setBackgroundColor(Color.parseColor("#CC000000")); // Черный полупрозрачный фон
+        layout.setBackgroundColor(Color.parseColor("#CC000000"));
 
-        // Заголовок
         TextView title = new TextView(this);
         title.setText("by.x1dead\nStandRise AutoWin");
         title.setTextColor(Color.RED);
@@ -36,28 +35,24 @@ public class OverlayService extends Service {
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
 
-        // Кнопка Вин
         Button winBtn = new Button(this);
         winBtn.setText("WIN 8:0 NOW");
         winBtn.setOnClickListener(v -> {
-            // Здесь будет вызов Root-команды для записи в память
-            // Мы вызовем наш бинарник, который сделает всё за нас
-            Process process = null;
             try {
-                process = Runtime.getRuntime().exec("su -c /data/local/tmp/x1dead_win");
+                // Создаем триггер-файл через су
+                Process process = Runtime.getRuntime().exec("su -c touch /data/local/tmp/win_trigger");
+                process.waitFor();
+                Toast.makeText(this, "Счет 8:0 применен!", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
+                Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
         });
         layout.addView(winBtn);
 
-        // Настройки окна (поверх всех приложений)
-        int layoutFlag;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
-        }
+        int layoutFlag = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O ?
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                WindowManager.LayoutParams.TYPE_PHONE;
         
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
