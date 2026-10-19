@@ -19,7 +19,6 @@ public class OverlayService extends Service {
     private LinearLayout layout;
     private WindowManager.LayoutParams params;
     
-    // Переменные для перемещения
     private float initialX, initialY;
     private int initialTouchX, initialTouchY;
     private boolean isDragging = false;
@@ -44,10 +43,22 @@ public class OverlayService extends Service {
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
 
+        // Кнопка инжекта
         Button btnNez = new Button(this);
         btnNez.setText("Внедрить nez3r");
         btnNez.setOnClickListener(v -> runSuCommand("sh /data/local/tmp/inj_auto.sh"));
         layout.addView(btnNez);
+
+        // Кнопка СТОП (закрыть оверлей)
+        Button btnStop = new Button(this);
+        btnStop.setText("Закрыть меню (СТОП)");
+        btnStop.setTextColor(Color.WHITE);
+        btnStop.setBackgroundColor(Color.RED);
+        btnStop.setOnClickListener(v -> {
+            stopSelf(); // Останавливаем сервис и скрываем оверлей
+            Toast.makeText(OverlayService.this, "Меню закрыто", Toast.LENGTH_SHORT).show();
+        });
+        layout.addView(btnStop);
 
         int layoutFlag = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O ?
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
@@ -64,7 +75,7 @@ public class OverlayService extends Service {
         params.x = 50;
         params.y = 200;
 
-        // --- ЛОГИКА ПЕРЕТАСКИВАНИЯ ---
+        // Логика перетаскивания
         layout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -79,8 +90,6 @@ public class OverlayService extends Service {
                     case MotionEvent.ACTION_MOVE:
                         int deltaX = (int) event.getRawX() - initialTouchX;
                         int deltaY = (int) event.getRawY() - initialTouchY;
-                        
-                        // Если сдвинули больше чем на 10 пикселей, считаем это перетаскиванием
                         if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                             isDragging = true;
                             params.x = (int) initialX + deltaX;
@@ -89,24 +98,9 @@ public class OverlayService extends Service {
                         }
                         return true;
                     case MotionEvent.ACTION_UP:
-                        // Если это было просто нажатие (а не перетаскивание)
-                        if (!isDragging) {
-                            // Здесь можно добавить логику, но пока пусть кнопка работает как обычно
-                            v.performClick();
-                        }
                         return true;
                 }
                 return false;
-            }
-        });
-
-        // --- ДОЛГОЕ НАЖАТИЕ ДЛЯ СКРЫТИЯ ---
-        layout.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Toast.makeText(OverlayService.this, "Меню скрыто", Toast.LENGTH_SHORT).show();
-                stopSelf(); // Останавливаем сервис и убираем оверлей
-                return true;
             }
         });
 
@@ -129,4 +123,4 @@ public class OverlayService extends Service {
         super.onDestroy();
         if (layout != null) windowManager.removeView(layout);
     }
-}
+    }
