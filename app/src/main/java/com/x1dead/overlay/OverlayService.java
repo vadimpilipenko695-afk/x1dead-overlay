@@ -38,8 +38,8 @@ public class OverlayService extends Service {
 
         Button btnNez = new Button(this);
         btnNez.setText("Внедрить nez3r");
-        // Вызываем оригинальный скрипт инжекта
-        btnNez.setOnClickListener(v -> runSuCommand("sh /data/local/tmp/inj.sh"));
+        // Кнопка запускает наш авто-скрипт
+        btnNez.setOnClickListener(v -> runSuCommand("sh /data/local/tmp/inj_auto.sh"));
         layout.addView(btnNez);
 
         int layoutFlag = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O ?
@@ -64,7 +64,7 @@ public class OverlayService extends Service {
         try {
             Process process = Runtime.getRuntime().exec("su -c " + command);
             process.waitFor();
-            Toast.makeText(this, "Запуск...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Запуск nez3r...", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
