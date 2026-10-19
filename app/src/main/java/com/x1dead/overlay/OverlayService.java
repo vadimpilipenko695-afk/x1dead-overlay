@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -15,6 +17,12 @@ import android.widget.Toast;
 public class OverlayService extends Service {
     private WindowManager windowManager;
     private LinearLayout layout;
+    private WindowManager.LayoutParams params;
+    
+    // Переменные для перемещения
+    private float initialX, initialY;
+    private int initialTouchX, initialTouchY;
+    private boolean isDragging = false;
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
@@ -38,7 +46,6 @@ public class OverlayService extends Service {
 
         Button btnNez = new Button(this);
         btnNez.setText("Внедрить nez3r");
-        // Кнопка запускает наш авто-скрипт
         btnNez.setOnClickListener(v -> runSuCommand("sh /data/local/tmp/inj_auto.sh"));
         layout.addView(btnNez);
 
@@ -46,7 +53,7 @@ public class OverlayService extends Service {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
                 WindowManager.LayoutParams.TYPE_PHONE;
         
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+        params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 layoutFlag,
@@ -56,6 +63,52 @@ public class OverlayService extends Service {
         params.gravity = Gravity.TOP | Gravity.START;
         params.x = 50;
         params.y = 200;
+
+        // --- ЛОГИКА ПЕРЕТАСКИВАНИЯ ---
+        layout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = params.x;
+                        initialY = params.y;
+                        initialTouchX = (int) event.getRawX();
+                        initialTouchY = (int) event.getRawY();
+                        isDragging = false;
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        int deltaX = (int) event.getRawX() - initialTouchX;
+                        int deltaY = (int) event.getRawY() - initialTouchY;
+                        
+                        // Если сдвинули больше чем на 10 пикселей, считаем это перетаскиванием
+                        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                            isDragging = true;
+                            params.x = (int) initialX + deltaX;
+                            params.y = (int) initialY + deltaY;
+                            windowManager.updateViewLayout(layout, params);
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        // Если это было просто нажатие (а не перетаскивание)
+                        if (!isDragging) {
+                            // Здесь можно добавить логику, но пока пусть кнопка работает как обычно
+                            v.performClick();
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        // --- ДОЛГОЕ НАЖАТИЕ ДЛЯ СКРЫТИЯ ---
+        layout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Toast.makeText(OverlayService.this, "Меню скрыто", Toast.LENGTH_SHORT).show();
+                stopSelf(); // Останавливаем сервис и убираем оверлей
+                return true;
+            }
+        });
 
         windowManager.addView(layout, params);
     }
