@@ -27,28 +27,20 @@ public class OverlayService extends Service {
         layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setBackgroundColor(Color.parseColor("#CC000000"));
+        layout.setPadding(30, 30, 30, 30);
 
         TextView title = new TextView(this);
-        title.setText("by.x1dead\nStandRise AutoWin");
+        title.setText("by.x1dead\nnez3r Loader");
         title.setTextColor(Color.RED);
-        title.setTextSize(20);
+        title.setTextSize(22);
         title.setGravity(Gravity.CENTER);
         layout.addView(title);
 
-        Button winBtn = new Button(this);
-        winBtn.setText("WIN 8:0 NOW");
-        winBtn.setOnClickListener(v -> {
-            try {
-                // Создаем триггер-файл через су
-                Process process = Runtime.getRuntime().exec("su -c touch /data/local/tmp/win_trigger");
-                process.waitFor();
-                Toast.makeText(this, "Счет 8:0 применен!", Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
-            }
-        });
-        layout.addView(winBtn);
+        Button btnNez = new Button(this);
+        btnNez.setText("Внедрить nez3r");
+        // Вызываем оригинальный скрипт инжекта
+        btnNez.setOnClickListener(v -> runSuCommand("sh /data/local/tmp/inj.sh"));
+        layout.addView(btnNez);
 
         int layoutFlag = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O ?
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
@@ -66,6 +58,17 @@ public class OverlayService extends Service {
         params.y = 200;
 
         windowManager.addView(layout, params);
+    }
+
+    private void runSuCommand(String command) {
+        try {
+            Process process = Runtime.getRuntime().exec("su -c " + command);
+            process.waitFor();
+            Toast.makeText(this, "Запуск...", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
     }
 
     @Override
